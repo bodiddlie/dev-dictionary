@@ -2,27 +2,61 @@ import React, { Component } from 'react';
 import { Button, Glyphicon } from 'react-bootstrap';
 import Term from './Term';
 import AddTerm from './AddTerm';
-import jsonData from '../data/db';
-import filter from 'lodash/filter'
 
-// Don't do this. You need to actually fetch the data from the server using
-// the API. This is a cheater way just to provide a visual example of what you
-// should see when you're done.
-const terms = jsonData.terms.map(term => ({
-  ...term,
-  definitions: filter(jsonData.definitions, { termId: term.id })
-}))
-
+const headers = new Headers({
+  'Content-Type': 'application/json'
+});
 
 class Dictionary extends Component {
+  static contextTypes = {
+    loggedInUser: React.PropTypes.object
+  }
+
   state = {
-    showAddTerm: false
+    showAddTerm: false,
+    terms: []
   };
+
+  componentDidMount() {
+    this.loadData();
+  }
+
+  loadData() {
+    fetch('/terms?_embed=definitions')
+      .then(response => response.json())
+      .then(terms => {
+        this.setState({terms});
+      });
+  }
 
   toggleAdd = () => this.setState({ showAddTerm: !this.state.showAddTerm })
 
+  addDef = (body) => {
+    fetch('/definitions', {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers,
+    })
+      .then(() => {
+        this.loadData();
+      })
+  }
+
+  addTerm = (name) => {
+    const userId = this.context.loggedInUser ? this.context.loggedInUser.id : 0;
+    fetch('/terms', {
+      method: 'POST',
+      body: JSON.stringify({name, userId}),
+      headers,
+    })
+      .then(() => {
+        this.loadData();
+        this.setState({showAddTerm: false});
+      });
+  }
+
   render() {
-    const { showAddTerm } = this.state;
+    const { showAddTerm, terms } = this.state;
 
     return (
       <div>
@@ -30,10 +64,10 @@ class Dictionary extends Component {
         <Button bsStyle="success" onClick={this.toggleAdd}>
           <Glyphicon glyph="plus-sign" /> Add term
         </Button>
-        {showAddTerm && <AddTerm hide={this.toggleAdd} />}
+        {showAddTerm && <AddTerm hide={this.toggleAdd} submit={this.addTerm} />}
         <div className="terms">
           {terms.map(term => {
-            return <Term key={term.id} term={term} />;
+            return <Term key={term.id} term={term} submit={this.addDef} />;
           })}
         </div>
       </div>

@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { Button, Col, ControlLabel, Form, FormControl, FormGroup, HelpBlock, Image, Well } from 'react-bootstrap';
 import Select from 'react-select';
-import jsonData from '../data/db';
+//import jsonData from '../data/db';
 import 'react-select/dist/react-select.css';
 
 // TODO: Fetch list of users from server via API.
-const options = jsonData.users;
+//const options = jsonData.users;
 
 const userComponent = props => {
   const value = props.value ? props.value : props.option
@@ -21,21 +21,38 @@ const userComponent = props => {
 class AddDefinition extends Component {
   static propTypes = {
     hide: React.PropTypes.func.isRequired,
+    submit: React.PropTypes.func.isRequired,
   };
 
   state = {
     who: null,
+    users: [],
+    content: '',
   };
 
-  createDefinition = () => {
+  componentDidMount() {
+    fetch('/users')
+      .then(response => response.json())
+      .then(users => {
+        this.setState({users});
+      });
+  }
+
+  createDefinition = (evt) => {
     // POST the definition to the server.
+    evt.preventDefault();
+    const data = {
+      content: this.state.content,
+      userId: this.state.who.id
+    };
+    this.props.submit(data);
   }
 
   selectWho = user => this.setState({ who: user });
 
   render() {
     const { hide } = this.props;
-    const { who } = this.state;
+    const { who, users, content } = this.state;
 
     return (
       <Well className="add-term">
@@ -45,7 +62,12 @@ class AddDefinition extends Component {
               Definition
             </Col>
             <Col sm={10}>
-              <FormControl componentClass="textarea" placeholder="Add your definition"/>
+              <FormControl 
+                componentClass="textarea" 
+                placeholder="Add your definition"
+                value={content}
+                onChange={e => this.setState({content: e.target.value})}
+              />
             </Col>
           </FormGroup>
 
@@ -55,7 +77,7 @@ class AddDefinition extends Component {
             </Col>
             <Col sm={10}>
               <Select
-                options={options}
+                options={users}
                 optionComponent={userComponent}
                 ignoreCase
                 onChange={this.selectWho}

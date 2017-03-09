@@ -8,6 +8,21 @@ class Navigation extends Component {
     loggedInUser: React.PropTypes.object,
   }
 
+  state = {
+    count: 0
+  }
+
+  componentDidMount() {
+    const {loggedInUser} = this.context;
+
+    if (loggedInUser) {
+      fetch(`/definitions?userId=${loggedInUser.id}`)
+        .then(response => response.json())
+        .then(data => data.length)
+        .then(count => this.setState({count}));
+    }
+  }
+
   render() {
     const { loggedInUser } = this.context;
 
@@ -20,18 +35,16 @@ class Navigation extends Component {
           <Navbar.Toggle />
         </Navbar.Header>
         <Navbar.Collapse>
-          <Nav pullRight>
-            {loggedInUser && <Navbar.Text>
+            {loggedInUser && <Nav pullRight><LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer></Nav>}
+            {!loggedInUser && <Nav pullRight><LinkContainer to="/login"><NavItem eventKey={2}>Login</NavItem></LinkContainer></Nav>}
+            {loggedInUser && <Navbar.Text pullRight>
+              {`{${this.state.count}}`} definitions
+            </Navbar.Text>}
+            {loggedInUser && <Navbar.Text pullRight>
               You are currently logged in as <Image className="nav-avatar" src={'/avatars/' + loggedInUser.avatarUrl} />
               {' '}
               <strong>{loggedInUser.name}</strong>
             </Navbar.Text>}
-            {loggedInUser && <Navbar.Text>
-              {'{3}'} definitions
-            </Navbar.Text>}
-            {loggedInUser && <LinkContainer to="/logout"><NavItem eventKey={2}>Logout</NavItem></LinkContainer>}
-            {!loggedInUser && <LinkContainer to="/login"><NavItem eventKey={2}>Login</NavItem></LinkContainer>}
-          </Nav>
         </Navbar.Collapse>
       </Navbar>
     )

@@ -4,10 +4,17 @@ import { Button, ControlLabel, Form, FormControl, FormGroup, Col, Well } from 'r
 class AddTerm extends Component {
   static propTypes = {
     hide: React.PropTypes.func.isRequired,
+    submit: React.PropTypes.func.isRequired
   };
 
-  createTerm = () => {
+  state = {
+    name: ''
+  }
+
+  createTerm = (evt) => {
     // POST the term to the server.
+    evt.preventDefault();
+    this.props.submit(this.state.name);
   }
 
   render() {
@@ -21,7 +28,7 @@ class AddTerm extends Component {
               Term
             </Col>
             <Col sm={10}>
-              <FormControl />
+              <FormControl value={this.state.name} onChange={e => this.setState({name: e.target.value})} />
             </Col>
           </FormGroup>
 
